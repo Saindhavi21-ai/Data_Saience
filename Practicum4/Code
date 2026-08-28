@@ -1,0 +1,117 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+
+df = pd.read_csv("Healthcare_Patient_Dataset.csv")
+
+print("Dataset Loaded Successfully!\n")
+
+print("First 5 Rows:")
+display(df.head())
+
+print("\nDataset Information:")
+df.info()
+
+print("\nMissing Values in Each Column:")
+print(df.isnull().sum())
+
+numerical_columns = df.select_dtypes(include=['number']).columns
+
+# Fill missing numerical values with median
+for col in numerical_columns:
+    df[col] = df[col].fillna(df[col].median())
+
+
+# Identify categorical/string columns
+categorical_columns = df.select_dtypes(include=['str']).columns
+
+# Fill missing categorical values with mode
+for col in categorical_columns:
+    df[col] = df[col].fillna(df[col].mode()[0])
+
+
+print("\nMissing Values After Imputation:")
+print(df.isnull().sum())
+
+gender_encoder = LabelEncoder()
+diagnosis_encoder = LabelEncoder()
+
+df["Gender"] = gender_encoder.fit_transform(df["Gender"])
+df["Diagnosis"] = diagnosis_encoder.fit_transform(df["Diagnosis"])
+
+
+print("\nDataset After Label Encoding:")
+display(df.head())
+
+# Box Plot - Blood Pressure
+plt.figure(figsize=(6, 4))
+plt.boxplot(df["Blood_Pressure"])
+plt.title("Box Plot - Blood Pressure")
+plt.ylabel("Blood Pressure")
+plt.show()
+
+
+# Box Plot - Blood Sugar
+plt.figure(figsize=(6, 4))
+plt.boxplot(df["Blood_Sugar"])
+plt.title("Box Plot - Blood Sugar")
+plt.ylabel("Blood Sugar")
+plt.show()
+
+scaler = MinMaxScaler()
+
+columns_to_scale = [
+    "Age",
+    "Height",
+    "Weight",
+    "Blood_Pressure",
+    "Blood_Sugar"
+]
+
+df[columns_to_scale] = scaler.fit_transform(
+    df[columns_to_scale]
+)
+
+
+print("\nDataset After Min-Max Normalization:")
+display(df.head())
+
+correlation_matrix = df.corr(numeric_only=True)
+
+print("\nCorrelation Matrix:")
+display(correlation_matrix)
+
+
+# Display Correlation Matrix as a Plot
+plt.figure(figsize=(9, 7))
+
+plt.imshow(
+    correlation_matrix,
+    cmap="coolwarm",
+    interpolation="nearest"
+)
+
+plt.colorbar()
+
+plt.xticks(
+    range(len(correlation_matrix.columns)),
+    correlation_matrix.columns,
+    rotation=45
+)
+
+plt.yticks(
+    range(len(correlation_matrix.columns)),
+    correlation_matrix.columns
+)
+
+plt.title("Correlation Matrix")
+
+plt.tight_layout()
+plt.show()
+
+df.to_csv(
+    "healthcare_processed.csv",
+    index=False
+)
+
+print("\nProcessed dataset saved successfully as 'healthcare_processed.csv'!")
